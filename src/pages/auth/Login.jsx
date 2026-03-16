@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Shield } from 'lucide-react';
 import { Input } from '../../components/common/FormComponents';
 import { Button } from '../../components/common/Button';
-import { login } from '../../redux/slices/authSlice';
+import { loginUser } from '../../redux/slices/authSlice';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -16,15 +16,18 @@ export default function Login() {
     password: '',
   });
 
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/dashboard';
+
   useEffect(() => {
     if (token) {
-      navigate('/dashboard');
+      navigate(from, { replace: true });
     }
-  }, [token, navigate]);
+  }, [token, navigate, from]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(login(formData));
+    dispatch(loginUser(formData));
   };
 
   const handleChange = (e) => {

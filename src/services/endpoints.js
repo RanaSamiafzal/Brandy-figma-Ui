@@ -1,10 +1,14 @@
 export const ENDPOINTS = {
-  LOGIN: '/api/auth/login',
-  REGISTER: '/api/auth/register',
-  GET_PROFILE: '/api/brand/profile',
-  GET_CAMPAIGNS: '/api/brand/campaigns',
-  CREATE_CAMPAIGN: '/api/brand/campaigns',
-  SEND_COLLAB_REQUEST: '/api/brand/requests',
-  GET_DASHBOARD_STATS: '/api/brand/dashboard-stats',
-  GET_INFLUENCERS: '/api/brand/influencers',
+  LOGIN: '/auth/login',
+  REGISTER: '/auth/register',
+  GET_PROFILE: '/auth/profile',
+  GET_CAMPAIGNS: '/campaigns',
+  CREATE_CAMPAIGN: '/campaigns',
+  SEND_COLLAB_REQUEST: '/collaboration-requests',
+  GET_DASHBOARD_STATS: '/brands/stats', // Adjust based on backend brandController
+  GET_INFLUENCERS: '/influencers',
+  FORGOT_PASSWORD: '/auth/forgot-password',
+  VERIFY_OTP: '/auth/verify-otp',
+  RESET_PASSWORD: '/auth/reset-password',
+
 };

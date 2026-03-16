@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Shield, Briefcase, Users } from 'lucide-react';
 import { Input } from '../../components/common/FormComponents';
 import { Button } from '../../components/common/Button';
-import { register } from '../../redux/slices/authSlice';
+import { registerUser } from '../../redux/slices/authSlice';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -25,13 +25,21 @@ export default function Register() {
     }
   }, [token, navigate]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match");
       return;
     }
-    dispatch(register({ ...formData, role: userType.toUpperCase() }));
+    
+    try {
+      await dispatch(registerUser({ ...formData, role: userType })).unwrap();
+      alert("Registration successful! Please login.");
+      navigate('/login');
+    } catch (err) {
+      // Error is handled by thunk and stored in state.error
+      console.error("Registration failed:", err);
+    }
   };
 
   const handleChange = (e) => {

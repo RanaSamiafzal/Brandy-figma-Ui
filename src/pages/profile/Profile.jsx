@@ -7,7 +7,7 @@ import { Sidebar } from '../../components/layout/Sidebar';
 import { Card, CardHeader } from '../../components/common/Cards';
 import { Input, Select, Textarea } from '../../components/common/FormComponents';
 import { Button } from '../../components/common/Button';
-import { updateProfile, fetchProfile } from '../../redux/slices/userSlice';
+import { fetchProfile, updateProfile } from '../../redux/slices/userSlice';
 import { logout } from '../../redux/slices/authSlice';
 
 export default function Profile() {
@@ -85,8 +85,13 @@ export default function Profile() {
     }
   };
 
-  const handleSave = () => {
-    dispatch(updateProfile({ ...formData, image: profileImage, coverImage }));
+  const handleSave = async () => {
+    try {
+      await dispatch(updateProfile(formData)).unwrap();
+      alert("Profile updated successfully!");
+    } catch (err) {
+      console.error("Profile update failed:", err);
+    }
   };
 
   const tabs = [

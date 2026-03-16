@@ -56,7 +56,9 @@ const AppRoutes = () => {
       <Route element={<ProtectedRoute />}>
         {/* Dashboard Routes */}
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/brand" element={<Dashboard />} />
         <Route path="/brand/dashboard" element={<Dashboard />} />
+        <Route path="/influencer" element={<Dashboard />} />
         <Route path="/influencer/dashboard" element={<Dashboard />} />
         <Route path="/influencer/dashboard-page" element={<Dashboard />} />
         <Route path="/admin" element={<Dashboard />} />

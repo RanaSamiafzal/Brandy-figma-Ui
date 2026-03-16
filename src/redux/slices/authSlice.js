@@ -1,34 +1,84 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../services/endpoints';
+import Cookies from 'js-cookie';
 
-export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
-  try {
-    const response = await api.post(ENDPOINTS.LOGIN, credentials);
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(error.response.data);
+export const loginUser = createAsyncThunk(
+  'auth/loginUser',
+  async (formData, { rejectWithValue }) => {
+    try {
+      const response = await api.post(ENDPOINTS.LOGIN, formData);
+      const data = response.data.data;
+      
+      // Persist to cookies
+      Cookies.set('token', data.accessToken, { expires: 7 });
+      Cookies.set('user', JSON.stringify(data.user), { expires: 7 });
+      
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Login failed');
+    }
   }
-});
+);
 
-export const register = createAsyncThunk('auth/register', async (userData, { rejectWithValue }) => {
-  try {
-    const response = await api.post(ENDPOINTS.REGISTER, userData);
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(error.response.data);
+export const registerUser = createAsyncThunk(
+  'auth/registerUser',
+  async (formData, { rejectWithValue }) => {
+    try {
+      const response = await api.post(ENDPOINTS.REGISTER, { 
+        fullname: formData.name, 
+        email: formData.email, 
+        password: formData.password, 
+        role: formData.role.toUpperCase() 
+      });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+    }
   }
-});
+);
+
+export const forgotPassword = createAsyncThunk(
+  'auth/forgotPassword',
+  async (email, { rejectWithValue }) => {
+    try {
+      await api.post(ENDPOINTS.FORGOT_PASSWORD, { email });
+      return true;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to send reset link');
+    }
+  }
+);
+
+export const verifyOtp = createAsyncThunk(
+  'auth/verifyOtp',
+  async ({ email, otp }, { rejectWithValue }) => {
+    try {
+      await api.post(ENDPOINTS.VERIFY_OTP, { email, otp });
+      return true;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Invalid or expired OTP');
+    }
+  }
+);
+
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async ({ email, otp, password }, { rejectWithValue }) => {
+    try {
+      await api.post(ENDPOINTS.RESET_PASSWORD, { email, otp, password });
+      return true;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to reset password');
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
-    user: JSON.parse(localStorage.getItem('user')) || null,
-    token: localStorage.getItem('token') || null,
+    user: Cookies.get('user') ? JSON.parse(Cookies.get('user')) : null,
+    token: Cookies.get('token') || null,
     loading: false,
     error: null,
   },
@@ -36,40 +86,85 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      state.error = null;
+      Cookies.remove('token');
+      Cookies.remove('user');
     },
+    clearError: (state) => {
+      state.error = null;
+    }
   },
   extraReducers: (builder) => {
     builder
-      .addCase(login.pending, (state) => {
+      // Login
+      .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(login.fulfilled, (state, action) => {
+      .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.token = action.payload.accessToken;
+        state.error = null;
       })
-      .addCase(login.rejected, (state, action) => {
+      .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || 'Login failed';
+        state.error = action.payload;
       })
-      .addCase(register.pending, (state) => {
+      // Register
+      .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(register.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state) => {
         state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.error = null;
       })
-      .addCase(register.rejected, (state, action) => {
+      .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || 'Registration failed';
+        state.error = action.payload;
+      })
+      // Forgot Password
+      .addCase(forgotPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(forgotPassword.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Verify OTP
+      .addCase(verifyOtp.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(verifyOtp.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(verifyOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Reset Password
+      .addCase(resetPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, clearError } = authSlice.actions;
 export default authSlice.reducer;
